@@ -13,6 +13,8 @@ import (
 	"github.com/yaronf/httpsign"
 	"go.woodpecker-ci.org/woodpecker/v3/server/model"
 	"go.yaml.in/yaml/v4"
+
+	_ "golang.org/x/crypto/x509roots/fallback"
 )
 
 type woodpeckerRequest struct {

@@ -17,8 +17,8 @@
         "type=bind,source=${localWorkspaceFolder}/container_files/Makefile,target=/src/Makefile",
         "type=bind,source=${localWorkspaceFolder}/container_files/forge.go,target=/src/forge.go",
         "type=bind,source=${localWorkspaceFolder}/container_files/template.go,target=/src/template.go",
-        "type=bind,source=/mnt/docker_volumes/.secrets/woodpecker/woodpecker_public_key,target=/run/secrets/woodpecker_public_key",
-        "type=bind,source=/mnt/docker_volumes/woodpecker/template_config_provider/templates/,target=/templates/"
+        "type=bind,source=/mnt/docker_volumes/.secrets/woodpecker/woodpecker_public_key,target=/run/secrets/woodpecker_public_key,ro",
+        "type=bind,source=/mnt/docker_volumes/woodpecker/template_config_provider/templates/,target=/templates/,ro"
     ],
 
     // Use appropriate language extension.

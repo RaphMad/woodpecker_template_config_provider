@@ -9,7 +9,7 @@ import (
 	"github.com/go-git/go-git/v6/storage/memory"
 )
 
-func getTemplateFileFromForge(req requestStructure) ([]byte, bool) {
+func getTemplateFileFromForge(req woodpeckerRequest) ([]byte, bool) {
 	repo, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
 		URL: req.Repo.Clone,
 		Auth: &http.BasicAuth{

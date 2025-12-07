@@ -15,13 +15,13 @@ import (
 	"go.yaml.in/yaml/v4"
 )
 
-type requestStructure struct {
+type woodpeckerRequest struct {
 	Repo     *model.Repo     `json:"repo"`
 	Pipeline *model.Pipeline `json:"pipeline"`
 	Netrc    *model.Netrc    `json:"netrc"`
 }
 
-type responseStructure struct {
+type woodpeckerResponse struct {
 	Configs []configData `json:"configs"`
 }
 
@@ -30,7 +30,7 @@ type configData struct {
 	Data string `json:"data"`
 }
 
-type templateDataStructure struct {
+type templateData struct {
 	Template string `yaml:"template"`
 	Data     any    `yaml:"data"`
 }
@@ -64,53 +64,53 @@ func main() {
 	}
 }
 
-func handleHttpRequest(w http.ResponseWriter, r *http.Request, pubKey ed25519.PublicKey) {
-	if r.Method != http.MethodPost {
+func handleHttpRequest(writer http.ResponseWriter, request *http.Request, pubKey ed25519.PublicKey) {
+	if request.Method != http.MethodPost {
 		log.Printf("Invalid signature")
-		http.Error(w, "Expected POST", http.StatusMethodNotAllowed)
+		http.Error(writer, "Expected POST", http.StatusMethodNotAllowed)
 		return
 	}
 
-	if !verifySignature(pubKey, r) {
-		http.Error(w, "Could not verify signature", http.StatusBadRequest)
+	if !verifySignature(pubKey, request) {
+		http.Error(writer, "Could not verify signature", http.StatusBadRequest)
 		return
 	}
 
-	req, ok := parseRequest(r)
+	req, ok := parseRequest(request)
 	if !ok {
-		http.Error(w, "Could not parse request", http.StatusBadRequest)
+		http.Error(writer, "Could not parse request", http.StatusBadRequest)
 		return
 	}
 
 	fileBytes, ok := getTemplateFileFromForge(req)
 	if !ok {
 		// Provided request did not contain template data, use config as-is.
-		w.WriteHeader(http.StatusNoContent)
+		writer.WriteHeader(http.StatusNoContent)
 		return
 	}
 
 	templateData, ok := parseTemplateData(fileBytes)
 	if !ok {
-		http.Error(w, "Could not parse template data", http.StatusBadRequest)
+		http.Error(writer, "Could not parse template data", http.StatusBadRequest)
 		return
 	}
 
 	generatedConfigs := generateConfigs(templateData.Template, templateData.Data)
 
 	if generatedConfigs != nil {
-		w.WriteHeader(http.StatusOK)
-		err := json.NewEncoder(w).Encode(responseStructure{
+		writer.WriteHeader(http.StatusOK)
+		err := json.NewEncoder(writer).Encode(woodpeckerResponse{
 			Configs: generatedConfigs,
 		})
 
 		if err != nil {
 			log.Printf("Could not encode generated configs as json: '%v'", err)
-			http.Error(w, "Could not encode generated configs as json", http.StatusBadRequest)
+			http.Error(writer, "Could not encode generated configs as json", http.StatusBadRequest)
 			return
 		}
 	} else {
 		// No configs could be generated from template data, try to use it as-is (still most likely an error).
-		w.WriteHeader(http.StatusNoContent)
+		writer.WriteHeader(http.StatusNoContent)
 	}
 }
 
@@ -134,10 +134,10 @@ func verifySignature(pubKey ed25519.PublicKey, r *http.Request) bool {
 	return true
 }
 
-func parseRequest(r *http.Request) (requestStructure, bool) {
-	var req requestStructure
+func parseRequest(request *http.Request) (woodpeckerRequest, bool) {
+	var req woodpeckerRequest
 
-	body, err := io.ReadAll(r.Body)
+	body, err := io.ReadAll(request.Body)
 	if err != nil {
 		log.Printf("Error reading body: '%v'", err)
 		return req, false
@@ -152,8 +152,8 @@ func parseRequest(r *http.Request) (requestStructure, bool) {
 	return req, true
 }
 
-func parseTemplateData(bytes []byte) (templateDataStructure, bool) {
-	var data templateDataStructure
+func parseTemplateData(bytes []byte) (templateData, bool) {
+	var data templateData
 
 	err := yaml.Unmarshal(bytes, &data)
 	if err != nil {

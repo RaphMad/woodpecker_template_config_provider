@@ -35,12 +35,6 @@ type templateDataStructure struct {
 	Data     any    `yaml:"data"`
 }
 
-type templateInput struct {
-	Repo     *model.Repo
-	Pipeline *model.Pipeline
-	Input    any
-}
-
 // Based on https://github.com/woodpecker-ci/example-config-service/blob/main/main.go
 func main() {
 	log.Println("woodpecker_template_config_provider started")
@@ -62,7 +56,7 @@ func main() {
 		log.Fatal("Failed to parse public key file")
 	}
 
-	http.HandleFunc("/ciconfig", func(w http.ResponseWriter, r *http.Request) { handleHttpRequest(w, r, pubKey) })
+	http.HandleFunc("/templateconfig", func(w http.ResponseWriter, r *http.Request) { handleHttpRequest(w, r, pubKey) })
 
 	err = http.ListenAndServe(":8000", nil)
 	if err != nil {
@@ -88,24 +82,20 @@ func handleHttpRequest(w http.ResponseWriter, r *http.Request, pubKey ed25519.Pu
 		return
 	}
 
-	templateData, ok := getTemplateDataFromForge(req)
+	fileBytes, ok := getTemplateFileFromForge(req)
 	if !ok {
 		// Provided request did not contain template data, use config as-is.
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 
-	data, ok := parseTemplateData(templateData)
+	templateData, ok := parseTemplateData(fileBytes)
 	if !ok {
 		http.Error(w, "Could not parse template data", http.StatusBadRequest)
 		return
 	}
 
-	generatedConfigs := generateConfigs(data.Template, templateInput{
-		Repo: req.Repo,
-		Pipeline: req.Pipeline,
-		Input: data.Data,
-	})
+	generatedConfigs := generateConfigs(templateData.Template, templateData.Data)
 
 	if generatedConfigs != nil {
 		w.WriteHeader(http.StatusOK)

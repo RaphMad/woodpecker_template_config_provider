@@ -1,1 +1,5 @@
 template: docker_build_and_push
+data:
+  downstream_repos:
+    - raphmad/docker_inventory_restarter
+    - raphmad/woodpecker_gotify_plugin

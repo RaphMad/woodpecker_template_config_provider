@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -39,12 +40,33 @@ type templateData struct {
 
 // Based on https://github.com/woodpecker-ci/example-config-service/blob/main/main.go
 func main() {
+	// Disable date/time log prefix.
 	log.SetFlags(0);
 	log.Println("woodpecker_template_config_provider started")
 
-	pubKeyRaw, err := os.ReadFile("/run/secrets/woodpecker_public_key")
+	// Read env vars.
+	publicKeyFile := lookupEnvOrDefault("WEBHOOK_PUBLIC_KEY_PATH", "/run/secrets/webhook_public_key")
+	port := lookupEnvOrDefault("CONFIG_SERVICE_PORT", "8000")
+
+	pubKey := loadPubKey(publicKeyFile)
+
+	http.HandleFunc("/templateconfig", func(w http.ResponseWriter, r *http.Request) { handleHttpRequest(w, r, pubKey) })
+	http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
+}
+
+func lookupEnvOrDefault(key string, defaultValue string) string {
+	value, ok := os.LookupEnv(key)
+	if !ok {
+		return defaultValue
+	}
+
+	return value
+}
+
+func loadPubKey(publicKeyFile string) ed25519.PublicKey {
+	pubKeyRaw, err := os.ReadFile(publicKeyFile)
 	if err != nil {
-		log.Fatalf("Failed to read /run/secrets/woodpecker_public_key: '%v'", err)
+		log.Fatalf("Failed to read %s: '%v'", publicKeyFile, err)
 	}
 
 	pemBlock, _ := pem.Decode(pubKeyRaw)
@@ -59,12 +81,7 @@ func main() {
 		log.Fatal("Failed to parse public key file")
 	}
 
-	http.HandleFunc("/templateconfig", func(w http.ResponseWriter, r *http.Request) { handleHttpRequest(w, r, pubKey) })
-
-	err = http.ListenAndServe(":8000", nil)
-	if err != nil {
-		log.Fatalf("Error on listen: '%v'", err)
-	}
+	return pubKey
 }
 
 func handleHttpRequest(writer http.ResponseWriter, request *http.Request, pubKey ed25519.PublicKey) {

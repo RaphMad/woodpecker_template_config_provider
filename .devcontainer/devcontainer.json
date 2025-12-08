@@ -10,7 +10,7 @@
 
     // Bind-mount source into dev container and set workspace.
     "workspaceMount": "type=bind,source=${localWorkspaceFolder}/container_files/main.go,target=/src/main.go",
-    "workspaceFolder": "/src",
+    "workspaceFolder": "/src/",
 
     // Could simply mount the src directory, but then we would lose the go.mod and go.sum files created by the devcontainer.
     "mounts": [

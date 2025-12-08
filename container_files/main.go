@@ -39,6 +39,7 @@ type templateData struct {
 
 // Based on https://github.com/woodpecker-ci/example-config-service/blob/main/main.go
 func main() {
+	log.SetFlags(0);
 	log.Println("woodpecker_template_config_provider started")
 
 	pubKeyRaw, err := os.ReadFile("/run/secrets/woodpecker_public_key")

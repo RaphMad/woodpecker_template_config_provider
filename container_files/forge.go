@@ -9,7 +9,7 @@ import (
 	"github.com/go-git/go-git/v6/storage/memory"
 )
 
-func getTemplateFileFromForge(req woodpeckerRequest) ([]byte, bool) {
+func getTemplateFileFromForge(req woodpeckerRequest, extraCABundle []byte) ([]byte, bool) {
 	repo, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
 		URL: req.Repo.Clone,
 		Auth: &http.BasicAuth{
@@ -17,6 +17,7 @@ func getTemplateFileFromForge(req woodpeckerRequest) ([]byte, bool) {
 			Password: req.Netrc.Password,
 		},
 		NoCheckout: true,
+		CABundle: extraCABundle,
 	})
 	if err != nil {
 		log.Printf("Error opening repo: '%v'", err)

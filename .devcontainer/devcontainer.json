@@ -23,7 +23,7 @@
     ],
 
     "containerEnv": {
-        "SSL_CERT_FILE": "/run/secrets/scale_ca"
+        "EXTRA_CA_CERT_FILE": "/run/secrets/scale_ca"
     },
 
     // Use appropriate language extension.

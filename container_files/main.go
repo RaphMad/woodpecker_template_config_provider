@@ -18,6 +18,11 @@ import (
 	_ "golang.org/x/crypto/x509roots/fallback"
 )
 
+var (
+	webbHookPublicKey ed25519.PublicKey
+	extraCABundle     []byte
+)
+
 type woodpeckerRequest struct {
 	Repo     *model.Repo     `json:"repo"`
 	Pipeline *model.Pipeline `json:"pipeline"`
@@ -44,13 +49,16 @@ func main() {
 	log.SetFlags(0);
 	log.Println("woodpecker_template_config_provider started")
 
-	// Read env vars.
 	publicKeyFile := lookupEnvOrDefault("WEBHOOK_PUBLIC_KEY_PATH", "/run/secrets/webhook_public_key")
 	port := lookupEnvOrDefault("CONFIG_SERVICE_PORT", "8000")
+	extraCAFile, ok := os.LookupEnv("EXTRA_CA_CERT_FILE")
+	if ok {
+		initializeExtraCABundle(extraCAFile)
+	}
 
-	pubKey := loadPubKey(publicKeyFile)
+	loadPublicKey(publicKeyFile)
 
-	http.HandleFunc("/templateconfig", func(w http.ResponseWriter, r *http.Request) { handleHttpRequest(w, r, pubKey) })
+	http.HandleFunc("/templateconfig", handleHttpRequest)
 	http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
 }
 
@@ -63,35 +71,45 @@ func lookupEnvOrDefault(key string, defaultValue string) string {
 	return value
 }
 
-func loadPubKey(publicKeyFile string) ed25519.PublicKey {
+func initializeExtraCABundle(fileName string) {
+	var err error
+	extraCABundle, err = os.ReadFile(fileName)
+		if err != nil {
+		log.Fatalf("Could not read extra CA cert file %s: '%v'", fileName, err)
+	}
+}
+
+func loadPublicKey(publicKeyFile string) {
 	pubKeyRaw, err := os.ReadFile(publicKeyFile)
 	if err != nil {
 		log.Fatalf("Failed to read %s: '%v'", publicKeyFile, err)
 	}
 
-	pemBlock, _ := pem.Decode(pubKeyRaw)
+	pemBlock, rest := pem.Decode(pubKeyRaw)
+	if len(rest) != 0 {
+		log.Fatal("PEM block contained rest.",)
+	}
 
 	b, err := x509.ParsePKIXPublicKey(pemBlock.Bytes)
 	if err != nil {
 		log.Fatalf("Failed to parse public key file: '%v'", err)
 	}
 
-	pubKey, ok := b.(ed25519.PublicKey)
+	var ok bool
+	webbHookPublicKey, ok = b.(ed25519.PublicKey)
 	if !ok {
 		log.Fatal("Failed to parse public key file")
 	}
-
-	return pubKey
 }
 
-func handleHttpRequest(writer http.ResponseWriter, request *http.Request, pubKey ed25519.PublicKey) {
+func handleHttpRequest(writer http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost {
 		log.Printf("Invalid signature")
 		http.Error(writer, "Expected POST", http.StatusMethodNotAllowed)
 		return
 	}
 
-	if !verifySignature(pubKey, request) {
+	if !verifySignature(request) {
 		http.Error(writer, "Could not verify signature", http.StatusBadRequest)
 		return
 	}
@@ -102,7 +120,7 @@ func handleHttpRequest(writer http.ResponseWriter, request *http.Request, pubKey
 		return
 	}
 
-	fileBytes, ok := getTemplateFileFromForge(req)
+	fileBytes, ok := getTemplateFileFromForge(req, extraCABundle)
 	if !ok {
 		// Provided request did not contain template data, use config as-is.
 		writer.WriteHeader(http.StatusNoContent)
@@ -134,12 +152,15 @@ func handleHttpRequest(writer http.ResponseWriter, request *http.Request, pubKey
 	}
 }
 
-func verifySignature(pubKey ed25519.PublicKey, r *http.Request) bool {
+func verifySignature(r *http.Request) bool {
 	pubKeyID := "woodpecker-ci-extensions"
 
-	verifier, err := httpsign.NewEd25519Verifier(pubKey,
+	verifier, err := httpsign.NewEd25519Verifier(
+		webbHookPublicKey,
 		httpsign.NewVerifyConfig(),
-		httpsign.Headers("@request-target", "content-digest"))
+		httpsign.Headers("@request-target", "content-digest"),
+	)
+
 	if err != nil {
 		log.Printf("Missing required headers: '%v'", err)
 		return false

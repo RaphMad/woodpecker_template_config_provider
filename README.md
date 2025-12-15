@@ -20,7 +20,7 @@ The following env vars should be set on your server:
 
 # Usage
 
-* In your project, create a file called `.woodpecker/woodpecker-template.yaml`:
+* In your project, create a file called `.woodpecker/woodpecker-template.yaml`, e.g.:
 
 ´´´
 template: <templatename>
@@ -31,7 +31,7 @@ data:
     - three
 ´´´
 
-* Inside your template config provider, provide one or multiple `.yaml.template` files under `/templates/<templatename>/`, e.g.:
+* Inside your template config provider, provide one or multiple `*.yaml.template` files under `/templates/<templatename>/`, e.g.:
 
 ```
 when:
@@ -46,7 +46,7 @@ steps:
 ```
 
 * `data:` is optional, templates can also be useful when multiple repos use the same pipeline without any differences
-* A `<templatename>` dir corresponds to a `Pipeline` and can contain multiple `.yaml.template` files, which correspond to individual `Workflows` (see Woodpecker documentation for more info)
+* A `<templatename>` dir corresponds to a `Pipeline` and can contain multiple `*.yaml.template` files, which correspond to individual `Workflows` (see Woodpecker documentation for more info)
 
 # Example compose snippet
 

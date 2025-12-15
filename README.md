@@ -11,7 +11,7 @@ The following env vars are can be set to modify behaviour the config extension:
 | CONFIG_SERVICE_PORT     | 8000                            | Listening port of the service.                                                                                                                                                    |
 | WEBHOOK_PUBLIC_KEY_PATH | /run/secrets/webhook_public_key | Path to a file containing your woodpecker webhook public key. It can be obtained via _any repo_ -> Settings -> Extensions.                                                        |
 | TEMPLATES_PATH          | /templates/                     | Path to your template directories.                                                                                                                                                |
-| EXTRA_CA_CERT_FILE      | _empty_                         | Path to an extra CA cert, useful when your forge uses a local CA. Will be passed as `CABundle` to [CloneOptions](CA`https://pkg.go.dev/github.com/go-git/go-git/v5#CloneOptions). |
+| EXTRA_CA_CERT_FILE      | _empty_                         | Path to an extra CA cert, useful when your forge uses a local CA. Will be passed as `CABundle` to [CloneOptions](https://pkg.go.dev/github.com/go-git/go-git/v5#CloneOptions). |
 
 The following env vars should be set on your woodpecker server:
 

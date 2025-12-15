@@ -2,17 +2,19 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"log"
 	"os"
+	"path"
 	"strings"
 	"text/template"
 )
 
 func generateConfigs(templateName string, data any) []configData {
-	dirs, err := os.ReadDir("/templates/")
+	templatesPath := lookupEnvOrDefault("TEMPLATES_PATH", "/templates/")
+
+	dirs, err := os.ReadDir(templatesPath)
 	if err != nil {
-		log.Printf("Failed to read /templates/: '%v'", err)
+		log.Printf("Failed to read '%s': '%v'", templatesPath, err)
 		return nil
 	}
 
@@ -22,9 +24,9 @@ func generateConfigs(templateName string, data any) []configData {
 		return nil
 	}
 
-	entries, err := os.ReadDir(fmt.Sprintf("/templates/%s/", dir.Name()))
+	entries, err := os.ReadDir(path.Join(templatesPath, dir.Name()))
 	if err != nil {
-		log.Printf("Failed to read /templates/%s/: '%v'", dir.Name(), err)
+		log.Printf("Failed to read '%s': '%v'", path.Join(templatesPath, dir.Name()), err)
 		return nil
 	}
 
@@ -32,7 +34,7 @@ func generateConfigs(templateName string, data any) []configData {
 
 	for _, entry := range entries {
 		var name = entry.Name()
-		var fullPath = fmt.Sprintf("/templates/%s/%s", dir.Name(), name)
+		var fullPath = path.Join(templatesPath, dir.Name(), name)
 
 		if (!entry.IsDir() && strings.HasSuffix(name, ".yaml.template")) {
 			config, ok := applyTemplate(name, fullPath, data)

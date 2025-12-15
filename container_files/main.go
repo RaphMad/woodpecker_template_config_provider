@@ -47,10 +47,21 @@ type templateData struct {
 func main() {
 	// Disable date/time log prefix.
 	log.SetFlags(0);
+
+	port := lookupEnvOrDefault("CONFIG_SERVICE_PORT", "8000")
+
+	if len(os.Args) == 2 && os.Args[1] == "ping" {
+		err := pinger(port);
+		if err != nil {
+			log.Fatalf("Error sending ping: '%v'", err)
+		}
+
+		return
+	}
+
 	log.Println("woodpecker_template_config_provider started")
 
 	publicKeyFile := lookupEnvOrDefault("WEBHOOK_PUBLIC_KEY_PATH", "/run/secrets/webhook_public_key")
-	port := lookupEnvOrDefault("CONFIG_SERVICE_PORT", "8000")
 	extraCAFile, ok := os.LookupEnv("EXTRA_CA_CERT_FILE")
 	if ok {
 		initializeExtraCABundle(extraCAFile)
@@ -59,6 +70,7 @@ func main() {
 	loadPublicKey(publicKeyFile)
 
 	http.HandleFunc("/templateconfig", handleHttpRequest)
+	http.HandleFunc("/healthz", handleHeartbeat)
 	http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
 }
 

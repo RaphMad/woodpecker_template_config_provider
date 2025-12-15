@@ -16,6 +16,7 @@
     "mounts": [
         "type=bind,source=${localWorkspaceFolder}/container_files/Makefile,target=/src/Makefile",
         "type=bind,source=${localWorkspaceFolder}/container_files/forge.go,target=/src/forge.go",
+        "type=bind,source=${localWorkspaceFolder}/container_files/health.go,target=/src/health.go",
         "type=bind,source=${localWorkspaceFolder}/container_files/template.go,target=/src/template.go",
         "type=bind,source=/mnt/docker_volumes/.secrets/woodpecker/webhook_public_key,target=/run/secrets/webhook_public_key,ro",
         "type=bind,source=/mnt/docker_volumes/.secrets/scale_CA.crt,target=/run/secrets/scale_ca,ro",

@@ -14,5 +14,8 @@ RUN cd /src/ && \
 
 
 FROM scratch
+
 COPY --from=build /out/woodpecker_template_config_provider /woodpecker_template_config_provider
+
+HEALTHCHECK ["/woodpecker_template_config_provider", "ping"]
 ENTRYPOINT ["/woodpecker_template_config_provider"]

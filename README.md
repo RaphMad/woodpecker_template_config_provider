@@ -47,7 +47,7 @@ steps:
       - echo {{ . }}{{ end }}
 ```
 
-* `data:` is optional, templates can also be useful when multiple repos share the exact same pipeline without any vars
+* `data:` is optional, templates can also be useful when multiple repos share the exact same pipeline without any text templating
 * A `<templatename>` dir corresponds to a `Pipeline` and can contain multiple `*.yaml.template` files, which correspond to individual `Workflows` (see Woodpecker documentation for more info)
 
 # Debugging tips

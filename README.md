@@ -13,7 +13,7 @@ The following env vars are can be set to modify behaviour the config extension.
 | TEMPLATES_PATH          | /templates/                     | Path to your template files                                                                                                                                                       |
 | EXTRA_CA_CERT_FILE      | _empty_                         | Path to an extra CA cert, useful when your forge uses a local CA. Will be passed as `CABundle` to [CloneOptions](CA`https://pkg.go.dev/github.com/go-git/go-git/v5#CloneOptions). |
 
-The following env vars should be set on your server:
+The following env vars should be set on your woodpecker server:
 
 * [WOODPECKER_CONFIG_SERVICE_ENDPOINT](https://woodpecker-ci.org/docs/usage/extensions/configuration-extension#global-configuration) (can also be set individually per repo)
 * [WOODPECKER_EXTENSIONS_ALLOWED_HOSTS](https://woodpecker-ci.org/docs/administration/configuration/server#extensions_allowed_hosts) (host part of your template config service)
@@ -22,14 +22,14 @@ The following env vars should be set on your server:
 
 * In your project, create a file called `.woodpecker/woodpecker-template.yaml`, e.g.:
 
-´´´
+```
 template: <templatename>
 data:
   lines:
     - one
     - two
     - three
-´´´
+```
 
 * Inside your template config provider, provide one or multiple `*.yaml.template` files under `/templates/<templatename>/`, e.g.:
 

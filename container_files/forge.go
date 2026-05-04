@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-git/go-git/v6"
 	"github.com/go-git/go-git/v6/plumbing"
+	"github.com/go-git/go-git/v6/plumbing/client"
 	"github.com/go-git/go-git/v6/plumbing/transport/http"
 	"github.com/go-git/go-git/v6/storage/memory"
 )
@@ -12,12 +13,14 @@ import (
 func getTemplateFileFromForge(req woodpeckerRequest, extraCABundle []byte) ([]byte, bool) {
 	repo, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
 		URL: req.Repo.Clone,
-		Auth: &http.BasicAuth{
-			Username: req.Netrc.Login,
-			Password: req.Netrc.Password,
-		},
 		NoCheckout: true,
-		CABundle: extraCABundle,
+		ClientOptions: []client.Option{
+			client.WithHTTPAuth(&http.BasicAuth{
+				Username: req.Netrc.Login,
+				Password: req.Netrc.Password,
+			}),
+			client.WithCABundle(extraCABundle),
+		},
 	})
 	if err != nil {
 		log.Printf("Error opening repo: '%v'", err)

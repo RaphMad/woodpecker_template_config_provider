@@ -1,4 +1,4 @@
-FROM alpine AS dev
+FROM alpine:edge AS dev
 
 RUN apk add --no-cache go \
                        make

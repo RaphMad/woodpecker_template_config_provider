@@ -20,6 +20,7 @@ func getTemplateFileFromForge(req woodpeckerRequest, extraCABundle []byte) ([]by
 				Password: req.Netrc.Password,
 			}),
 			client.WithCABundle(extraCABundle),
+			client.WithInsecureSkipTLS(),
 		},
 	})
 	if err != nil {

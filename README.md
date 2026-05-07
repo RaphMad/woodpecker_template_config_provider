@@ -15,8 +15,11 @@ The following env vars are can be set to modify behaviour the config extension:
 
 The following env vars should be set on your woodpecker server:
 
-* [WOODPECKER_CONFIG_SERVICE_ENDPOINT](https://woodpecker-ci.org/docs/usage/extensions/configuration-extension#global-configuration) (can also be set individually per repo)
+* [WOODPECKER_CONFIG_EXTENSION_ENDPOINT](https://woodpecker-ci.org/docs/usage/extensions/configuration-extension#global-configuration) (can also be set individually per repo)
   * e.g.: `WOODPECKER_CONFIG_SERVICE_ENDPOINT: http://woodpecker_template_config_provider:8000/templateconfig`
+* [WOODPECKER_CONFIG_EXTENSION_NETRC]((https://woodpecker-ci.org/docs/usage/extensions/configuration    -extension#global-configuration)
+  * Needs to be set to `true` to allow retrieving the template from the forge
+  * e.g.: `WOODPECKER_CONFIG_EXTENSION_NETRC: true`
 * [WOODPECKER_EXTENSIONS_ALLOWED_HOSTS](https://woodpecker-ci.org/docs/administration/configuration/server#extensions_allowed_hosts) (host part of your template config service)
   * e.g.: `WOODPECKER_EXTENSIONS_ALLOWED_HOSTS: woodpecker_template_config_provider`
 

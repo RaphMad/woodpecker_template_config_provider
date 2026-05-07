@@ -11,7 +11,7 @@ import (
 )
 
 func getTemplateFileFromForge(req woodpeckerRequest, extraCABundle []byte) ([]byte, bool) {
-	repo, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
+	cloneOptions := &git.CloneOptions{
 		URL: req.Repo.Clone,
 		NoCheckout: true,
 		ClientOptions: []client.Option{
@@ -19,10 +19,17 @@ func getTemplateFileFromForge(req woodpeckerRequest, extraCABundle []byte) ([]by
 				Username: req.Netrc.Login,
 				Password: req.Netrc.Password,
 			}),
-			client.WithCABundle(extraCABundle),
-			client.WithInsecureSkipTLS(),
 		},
-	})
+	}
+
+	repo, err := git.Clone(memory.NewStorage(), nil, cloneOptions)
+
+	// If cloning failed, try again with the provided extra CA bundle
+	if (err != nil) {
+		cloneOptions.ClientOptions = append(cloneOptions.ClientOptions, client.WithCABundle(extraCABundle))
+	}
+
+	repo, err = git.Clone(memory.NewStorage(), nil, cloneOptions)
 	if err != nil {
 		log.Printf("Error opening repo: '%v'", err)
 		return nil, false
